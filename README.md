@@ -42,6 +42,39 @@ This sample does cover:
 
 The prompts and products are intentionally small and illustrative. They exist to exercise the rendering contract, not to represent the full catalog or final conversational behavior.
 
+## Loading Surfaces And Motion
+
+The agent can send a loading A2UI surface before it sends the completed
+surface. Preserve that loading-first behavior in an integration: it gives the
+shopper immediate, contextual feedback while product retrieval and generation
+continue. The parser removes a skeleton surface when its completed counterpart
+arrives, so renderers only need to respect `surface.isLoading`.
+
+This reference renders **content-shaped skeletons**, not a single generic
+loading block. Each skeleton should reserve the space and hierarchy of the
+result it represents:
+
+| Surface | Loading placeholder |
+|---|---|
+| Product carousel | Product cards with image, brand, name, price, and CTA bars. |
+| Comparison table | Column headings, image cells, attribute labels, and value cells. |
+| Bundle display | Title, tabs, description, and product-slot cards. |
+| Product research | Product image/details beside summary and feature-copy bars. |
+| Next actions | Pill-shaped action controls. |
+
+The shared [`SkeletonComponent`](src/app/components/skeleton.component.ts)
+owns skeleton shimmer and reduced-motion handling. Surface templates use
+Angular's native `animate.enter="skeleton-reveal"` binding with staggered
+delays to slide elements in from the right, so loading feels progressive
+instead of appearing as one static block. Keep these animations brief and
+non-blocking. Any replacement animation must preserve the shopper's
+`prefers-reduced-motion` preference.
+
+When adding a new A2UI surface, implement its loading shape at the same time
+as its completed renderer. Do not delay showing a surface until all of its
+data is available, and do not show fake product names, prices, or imagery in a
+skeleton state.
+
 ## Storefront Integration Assumption
 
 This guide assumes the conversation experience is one feature within a larger storefront, not the entire website.

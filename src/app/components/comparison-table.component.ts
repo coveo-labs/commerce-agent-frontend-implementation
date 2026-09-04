@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { formatAudPrice } from '../formatting';
 import { ComparisonTableSurface } from '../models';
+import { SkeletonComponent } from './skeleton.component';
 
 @Component({
   selector: 'app-comparison-table',
@@ -12,7 +13,20 @@ import { ComparisonTableSurface } from '../models';
       </header>
 
       @if (surface().isLoading) {
-        <div class="loading-table"></div>
+        <div class="loading-table" role="status" aria-label="Loading comparison">
+          <div class="comparison-skeleton-grid">
+            <app-skeleton class="skeleton-line skeleton-table-label" animate.enter="skeleton-reveal" style="--reveal-delay: 100ms"></app-skeleton>
+            @for (item of skeletonColumns; track $index) {
+              <app-skeleton class="skeleton-line skeleton-table-heading" animate.enter="skeleton-reveal" [style.--reveal-delay]="200 + $index * 120 + 'ms'"></app-skeleton>
+            }
+            @for (row of skeletonRows; track $index; let rowIndex = $index) {
+              <app-skeleton class="skeleton-line skeleton-table-label" animate.enter="skeleton-reveal" [style.--reveal-delay]="550 + rowIndex * 180 + 'ms'"></app-skeleton>
+              @for (column of skeletonColumns; track $index) {
+                <app-skeleton animate.enter="skeleton-reveal" [class.skeleton-table-image]="rowIndex === 0" [class.skeleton-line]="rowIndex !== 0" [class.skeleton-table-value]="rowIndex !== 0" [style.--reveal-delay]="620 + rowIndex * 180 + $index * 70 + 'ms'"></app-skeleton>
+              }
+            }
+          </div>
+        </div>
       } @else {
         <div class="comparison-grid" [style.grid-template-columns]="gridColumns()">
           <div class="comparison-cell comparison-corner"></div>
@@ -139,27 +153,32 @@ import { ComparisonTableSurface } from '../models';
       }
 
       .loading-table {
-        height: 220px;
+        overflow-x: auto;
         border-radius: 18px;
-        background:
-          linear-gradient(90deg, rgba(231, 221, 209, 0.95), rgba(247, 241, 232, 0.95), rgba(231, 221, 209, 0.95));
-        background-size: 200% 100%;
-        animation: shimmer 1.25s linear infinite;
+        border: 1px solid rgba(17, 35, 31, 0.1);
+        background: rgba(255, 255, 255, 0.6);
+        padding: 1px;
       }
 
-      @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
-      }
+      .comparison-skeleton-grid { display: grid; grid-template-columns: minmax(120px, auto) repeat(3, minmax(140px, 1fr)); min-width: 580px; }
+      .comparison-skeleton-grid app-skeleton { margin: 12px 14px; }
+      .skeleton-line { height: 14px; }
+      .skeleton-table-label { width: 70%; }
+      .skeleton-table-heading { width: 75%; }
+      .skeleton-table-value { width: 60%; }
+      .skeleton-table-image { width: 80%; height: 88px; border-radius: 14px; }
+      .skeleton-reveal { animation: skeleton-reveal 0.4s var(--reveal-delay, 0ms) both ease-out; }
+
+      @keyframes skeleton-reveal { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+      @media (prefers-reduced-motion: reduce) { .skeleton-reveal { animation: none; } }
     `,
   ],
+  imports: [SkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ComparisonTableComponent {
+  protected readonly skeletonColumns = Array.from({ length: 3 });
+  protected readonly skeletonRows = Array.from({ length: 5 });
   readonly surface = input.required<ComparisonTableSurface>();
 
   protected readonly gridColumns = computed(

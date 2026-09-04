@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { NextActionsBarSurface } from '../models';
+import { SkeletonComponent } from './skeleton.component';
 
 @Component({
   selector: 'app-next-actions-bar',
@@ -21,7 +22,7 @@ import { NextActionsBarSurface } from '../models';
       } @else {
         <div class="loading-row">
           @for (item of placeholders; track $index) {
-            <span></span>
+            <app-skeleton class="skeleton-action" animate.enter="skeleton-reveal" [style.--reveal-delay]="$index * 140 + 'ms'"></app-skeleton>
           }
         </div>
       }
@@ -53,7 +54,7 @@ import { NextActionsBarSurface } from '../models';
       }
 
       button,
-      .loading-row span {
+      .skeleton-action {
         border-radius: 999px;
         padding: 10px 14px;
       }
@@ -67,26 +68,19 @@ import { NextActionsBarSurface } from '../models';
         font: inherit;
       }
 
-      .loading-row span {
+      .skeleton-action {
         display: inline-block;
         width: 160px;
         height: 38px;
-        background:
-          linear-gradient(90deg, rgba(231, 221, 209, 0.95), rgba(247, 241, 232, 0.95), rgba(231, 221, 209, 0.95));
-        background-size: 200% 100%;
-        animation: shimmer 1.25s linear infinite;
+        box-sizing: border-box;
       }
 
-      @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
-      }
+      .skeleton-reveal { animation: skeleton-reveal 0.4s var(--reveal-delay, 0ms) both ease-out; }
+      @keyframes skeleton-reveal { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+      @media (prefers-reduced-motion: reduce) { .skeleton-reveal { animation: none; } }
     `,
   ],
+  imports: [SkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NextActionsBarComponent {
