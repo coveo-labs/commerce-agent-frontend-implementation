@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { formatAudPrice } from '../formatting';
 import { BundleDisplaySurface, BundleDisplayTier } from '../models';
+import { SkeletonComponent } from './skeleton.component';
 
 @Component({
   selector: 'app-bundle-display',
@@ -13,9 +14,24 @@ import { BundleDisplaySurface, BundleDisplayTier } from '../models';
 
       @if (surface().isLoading) {
         <div class="loading-grid">
-          @for (item of placeholders; track $index) {
-            <div class="loading-card"></div>
-          }
+          <article class="loading-card" role="status" aria-label="Loading bundle">
+            <app-skeleton class="skeleton-line skeleton-bundle-title" animate.enter="skeleton-reveal" style="--reveal-delay: 100ms"></app-skeleton>
+            <div class="skeleton-tabs" animate.enter="skeleton-reveal" style="--reveal-delay: 300ms">
+              @for (item of skeletonTabs; track $index) { <app-skeleton class="skeleton-tab"></app-skeleton> }
+            </div>
+            <app-skeleton class="skeleton-line skeleton-bundle-description" animate.enter="skeleton-reveal" style="--reveal-delay: 500ms"></app-skeleton>
+            <app-skeleton class="skeleton-line skeleton-bundle-description short" animate.enter="skeleton-reveal" style="--reveal-delay: 580ms"></app-skeleton>
+            <div class="slot-grid bundle-skeleton-slots">
+              @for (item of skeletonSlots; track $index) {
+                <div class="slot skeleton-slot" animate.enter="skeleton-reveal" [style.--reveal-delay]="750 + $index * 180 + 'ms'">
+                  <app-skeleton class="skeleton-slot-image"></app-skeleton>
+                  <app-skeleton class="skeleton-line skeleton-slot-label"></app-skeleton>
+                  <app-skeleton class="skeleton-line skeleton-slot-name"></app-skeleton>
+                  <app-skeleton class="skeleton-line skeleton-slot-price"></app-skeleton>
+                </div>
+              }
+            </div>
+          </article>
         </div>
       } @else {
         @for (bundle of surface().bundles; track bundle.bundleId) {
@@ -94,11 +110,21 @@ import { BundleDisplaySurface, BundleDisplayTier } from '../models';
 
       .loading-card {
         min-height: 180px;
-        background:
-          linear-gradient(90deg, rgba(231, 221, 209, 0.95), rgba(247, 241, 232, 0.95), rgba(231, 221, 209, 0.95));
-        background-size: 200% 100%;
-        animation: shimmer 1.25s linear infinite;
       }
+
+      .skeleton-line { height: 14px; }
+      .skeleton-bundle-title { width: 35%; height: 22px; }
+      .skeleton-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+      .skeleton-tab { width: 85px; height: 34px; border-radius: 8px; }
+      .skeleton-bundle-description { width: 80%; height: 12px; margin-bottom: 6px; }
+      .skeleton-bundle-description.short { width: 55%; }
+      .bundle-skeleton-slots { margin-top: 16px; }
+      .skeleton-slot { min-height: 180px; display: flex; flex-direction: column; gap: 8px; }
+      .skeleton-slot-image { width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; }
+      .skeleton-slot-label { width: 42%; height: 10px; margin-top: 2px; }
+      .skeleton-slot-name { width: 80%; }
+      .skeleton-slot-price { width: 35%; margin-top: auto; }
+      .skeleton-reveal { animation: skeleton-reveal 0.4s var(--reveal-delay, 0ms) both ease-out; }
 
       .bundle-head p {
         margin-top: 8px;
@@ -187,20 +213,16 @@ import { BundleDisplaySurface, BundleDisplayTier } from '../models';
         color: #11231f;
       }
 
-      @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
-      }
+      @keyframes skeleton-reveal { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+      @media (prefers-reduced-motion: reduce) { .skeleton-reveal { animation: none; } }
     `,
   ],
+  imports: [SkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BundleDisplayComponent {
-  protected readonly placeholders = Array.from({ length: 1 });
+  protected readonly skeletonTabs = Array.from({ length: 3 });
+  protected readonly skeletonSlots = Array.from({ length: 3 });
   readonly surface = input.required<BundleDisplaySurface>();
 
   protected slotPrice(product: { ec_promo_price?: number; ec_price?: number } | null | undefined): number | null {

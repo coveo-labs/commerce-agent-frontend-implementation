@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { formatAudPrice } from '../formatting';
 import { ProductCarouselSurface } from '../models';
+import { SkeletonComponent } from './skeleton.component';
 
 @Component({
   selector: 'app-product-carousel',
@@ -40,7 +41,15 @@ import { ProductCarouselSurface } from '../models';
       @if (surface().isLoading) {
         <div class="loading-grid">
           @for (item of placeholders; track $index) {
-            <div class="loading-card"></div>
+            <article class="loading-card" animate.enter="skeleton-reveal" [style.--reveal-delay]="$index * 160 + 'ms'">
+              <app-skeleton class="skeleton-image"></app-skeleton>
+              <app-skeleton class="skeleton-line skeleton-brand"></app-skeleton>
+              <app-skeleton class="skeleton-line skeleton-product-name"></app-skeleton>
+              <div class="skeleton-card-footer">
+                <app-skeleton class="skeleton-line skeleton-price"></app-skeleton>
+                <app-skeleton class="skeleton-line skeleton-cta"></app-skeleton>
+              </div>
+            </article>
           }
         </div>
       } @else {
@@ -194,12 +203,18 @@ import { ProductCarouselSurface } from '../models';
       }
 
       .loading-card {
-        min-height: 220px;
-        background:
-          linear-gradient(90deg, rgba(231, 221, 209, 0.95), rgba(247, 241, 232, 0.95), rgba(231, 221, 209, 0.95));
-        background-size: 200% 100%;
-        animation: shimmer 1.25s linear infinite;
+        min-height: 290px;
+        gap: 10px;
       }
+
+      .skeleton-image { width: 100%; aspect-ratio: 1 / 1; margin-bottom: 2px; border-radius: 16px; }
+      .skeleton-line { height: 14px; }
+      .skeleton-brand { width: 38%; height: 10px; }
+      .skeleton-product-name { width: 80%; }
+      .skeleton-card-footer { display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 8px; }
+      .skeleton-price { width: 36%; }
+      .skeleton-cta { width: 30%; }
+      .skeleton-reveal { animation: skeleton-reveal 0.4s var(--reveal-delay, 0ms) both ease-out; }
 
       .swatch {
         width: 100%;
@@ -222,16 +237,11 @@ import { ProductCarouselSurface } from '../models';
         font-size: 0.82rem;
       }
 
-      @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
-      }
+      @keyframes skeleton-reveal { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+      @media (prefers-reduced-motion: reduce) { .skeleton-reveal { animation: none; } }
     `,
   ],
+  imports: [SkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductCarouselComponent {
